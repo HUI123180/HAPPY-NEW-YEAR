@@ -42,7 +42,7 @@ canvas{
 <audio id="bgMusic" loop preload="auto">
 
 <canvas id="fireworks"></canvas>
-<div class="text" id="name">胡笑宇</div>
+<div class="text" id="name">妈妈</div>
 <div class="text" id="wish">新年快乐！</div>
 <div class="text" id="msg1">还没关闭吗？</div>
 <div class="text" id="msg2">希望你现在开心😊</div>
@@ -136,7 +136,9 @@ function startText() {
   }, 2500);
 
   setTimeout(() => {
+    // 彩蛋出场前，先把新年快乐隐藏
     wishEl.style.opacity = 0;
+
     msg1.style.opacity = 1;
     setTimeout(() => {
       msg1.style.opacity = 0;
