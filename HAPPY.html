@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>新年快乐</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:#000;
+  overflow:hidden;
+  font-family: "Microsoft YaHei", sans-serif;
+}
+canvas{
+  display:block;
+  width:100vw;
+  height:100vh;
+}
+
+/* 统一、干净、柔和的字幕样式 */
+.text {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(255,255,255,0.6), 0 0 30px rgba(255,80,80,0.4);
+  opacity: 0;
+  white-space: nowrap;
+  transition: opacity 1.2s ease;
+}
+
+#name { font-size: 46px; }
+#wish { font-size: 42px; }
+#msg1, #msg2 { font-size: 34px; }
+
+</style>
+</head>
+<body>
+<canvas id="fireworks"></canvas>
+<div class="text" id="name">王奇婧</div>
+<div class="text" id="wish">新年快乐！</div>
+<div class="text" id="msg1">还没关闭吗？</div>
+<div class="text" id="msg2">希望你现在开心😊</div>
+
+<script>
+const canvas = document.getElementById('fireworks');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let rockets = [];
+let particles = [];
+let textParticles = [];
+let startTime = Date.now();
+let rocketCount = 0;
+
+const nameEl = document.getElementById('name');
+const wishEl = document.getElementById('wish');
+const msg1 = document.getElementById('msg1');
+const msg2 = document.getElementById('msg2');
+
+// 轻粒子消散（温柔、不夸张）
+class TextParticle {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.vx = (Math.random()-0.5)*2;
+    this.vy = (Math.random()-0.5)*2;
+    this.life = 1;
+    this.decay = 0.02;
+  }
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.vy += 0.02;
+    this.life -= this.decay;
+  }
+  draw() {
+    if (this.life <= 0) return;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, 1.2, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(255,255,255,${this.life*0.6})`;
+    ctx.fill();
+  }
+}
+
+function addTextDissolve() {
+  const cx = canvas.width / 2;
+  const cy = canvas.height / 2;
+  for (let i=0; i<40; i++) {
+    textParticles.push(new TextParticle(cx, cy));
+  }
+}
+
+// 纯净淡入淡出，无任何缩放
+function startText() {
+  nameEl.style.opacity = 1;
+
+  setTimeout(() => {
+    nameEl.style.opacity = 0;
+    addTextDissolve();
+  }, 1700);
+
+  setTimeout(() => {
+    wishEl.style.opacity = 1;
+  }, 2500);
+
+  setTimeout(() => {
+    // 彩蛋出场前，先把新年快乐隐藏
+    wishEl.style.opacity = 0;
+
+    msg1.style.opacity = 1;
+    setTimeout(() => {
+      msg1.style.opacity = 0;
+      setTimeout(() => {
+        msg2.style.opacity = 1;
+      }, 1000);
+    }, 2500);
+  }, 22500);
+}
+
+// ====================== 烟花完全没动 ======================
+class Rocket {
+  constructor() {
+    this.x = Math.random() * canvas.width;
+    this.y = canvas.height;
+    this.targetY = Math.random() * 250 + 150;
+    this.speed = Math.random() * 2 + 2;
+    this.color = `hsl(${Math.random()*360}, 100%, 60%)`;
+    this.trail = [];
+    this.alive = true;
+  }
+  update() {
+    this.trail.push({x: this.x, y: this.y});
+    if (this.trail.length > 12) this.trail.shift();
+    this.y -= this.speed;
+    if (this.y <= this.targetY) {
+      this.alive = false;
+      this.explode();
+      rocketCount++;
+      if (rocketCount === 2) {
+        setTimeout(startText, 600);
+      }
+    }
+  }
+  draw() {
+    for (let i = 0; i < this.trail.length; i++) {
+      const a = (i + 1) / this.trail.length * 0.6;
+      ctx.beginPath();
+      ctx.arc(this.trail[i].x, this.trail[i].y, 1.4, 0, Math.PI*2);
+      ctx.fillStyle = `hsla(${this.color.match(/\d+/g)[0]}, 100%, 60%, ${a})`;
+      ctx.fill();
+    }
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, 3.2, 0, Math.PI*2);
+    ctx.fillStyle = this.color;
+    ctx.fill();
+  }
+  explode() {
+    for (let i = 0; i < 128; i++) {
+      particles.push(new Particle(this.x, this.y, this.color, 1.2));
+    }
+    for (let i = 0; i < 40; i++) {
+      particles.push(new Particle(this.x, this.y, "#fff", 2.0));
+    }
+  }
+}
+
+class Particle {
+  constructor(x, y, color, scale) {
+    this.x = x;
+    this.y = y;
+    this.vx = (Math.random() - 0.5) * 5;
+    this.vy = (Math.random() - 0.5) * 5;
+    this.life = 1;
+    this.color = color;
+    this.scale = scale;
+    this.decay = 0.012;
+  }
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.vy += 0.04;
+    this.life -= this.decay;
+  }
+  draw() {
+    if (this.life <= 0) return;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, 1.8 * this.scale, 0, Math.PI*2);
+    if (this.color.startsWith('#')) {
+      ctx.fillStyle = `rgba(255,255,255,${this.life})`;
+    } else {
+      ctx.fillStyle = `hsla(${this.color.match(/\d+/g)[0]}, 100%, 65%, ${this.life})`;
+    }
+    ctx.fill();
+  }
+}
+
+function loop() {
+  ctx.fillStyle = "rgba(0,0,0,0.12)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  if (Date.now() - startTime < 9000) {
+    if (Math.random() < 0.032) {
+      rockets.push(new Rocket());
+    }
+  }
+
+  rockets = rockets.filter(r => r.alive);
+  rockets.forEach(r => { r.update(); r.draw(); });
+
+  particles = particles.filter(p => p.life > 0);
+  particles.forEach(p => { p.update(); p.draw(); });
+
+  textParticles = textParticles.filter(t => t.life > 0);
+  textParticles.forEach(t => { t.update(); t.draw(); });
+
+  requestAnimationFrame(loop);
+}
+
+window.addEventListener('load', loop);
+</script>
+</body>
+</html>
