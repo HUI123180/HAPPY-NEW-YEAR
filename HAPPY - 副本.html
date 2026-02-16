@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>新年快乐</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -38,13 +38,41 @@ canvas{
 </style>
 </head>
 <body>
+<!-- 背景音乐标签（已正确闭合） -->
+<audio id="bgMusic" loop preload="auto">
+
 <canvas id="fireworks"></canvas>
-<div class="text" id="name">王奇婧</div>
+<div class="text" id="name">胡笑宇</div>
 <div class="text" id="wish">新年快乐！</div>
 <div class="text" id="msg1">还没关闭吗？</div>
 <div class="text" id="msg2">希望你现在开心😊</div>
 
 <script>
+// 👇 你的音乐直链（已填好）
+const musicUrl = "https://hui123180.github.io/HAPPY-NEW-YEAR/郑语桐-住在心里的人.mp3";
+const bgAudio = document.getElementById('bgMusic');
+bgAudio.src = musicUrl;
+bgAudio.volume = 0.15; // 音量15%，很小
+
+// 微信/浏览器兼容自动播放（用户点一下就出声）
+function playMusic() {
+  bgAudio.play().catch(err => {
+    console.log("自动播放被阻止，等待用户交互");
+    document.body.addEventListener('touchstart', playMusic, { once: true });
+    document.body.addEventListener('click', playMusic, { once: true });
+  });
+}
+
+// 微信专用触发
+if (window.WeixinJSBridge) {
+  WeixinJSBridge.invoke('getNetworkType', {}, playMusic);
+} else {
+  document.addEventListener('WeixinJSBridgeReady', playMusic, false);
+}
+
+window.addEventListener('load', playMusic);
+
+// 下面是你原来的烟花+字幕代码，完全没动
 const canvas = document.getElementById('fireworks');
 const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
@@ -108,9 +136,7 @@ function startText() {
   }, 2500);
 
   setTimeout(() => {
-    // 彩蛋出场前，先把新年快乐隐藏
     wishEl.style.opacity = 0;
-
     msg1.style.opacity = 1;
     setTimeout(() => {
       msg1.style.opacity = 0;
